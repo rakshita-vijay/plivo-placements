@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>InspireWorks — IVR Switchboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --panel-black: #0b0d0c;
+    --panel-charcoal: #141712;
+    --panel-charcoal-2: #1b1f19;
+    --panel-line: #2c322a;
+    --amber: #f2a900;
+    --amber-dim: #8a6106;
+    --phosphor: #5eff9a;
+    --phosphor-dim: #1f7a49;
+    --alert-red: #ff5c4d;
+    --paper: #e9e6da;
+    --paper-dim: #8f8b7c;
+    --font-display: 'Big Shoulders Display', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+    --font-body: 'IBM Plex Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--panel-black);
+    color: var(--paper);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse 120% 80% at 50% -10%, rgba(242,169,0,0.06), transparent 60%),
+      repeating-linear-gradient(0deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 3px);
+  }
+
+  .frame {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 28px 24px 60px;
+  }
+
+  /* -------------------- Header -------------------- */
+  .header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    border-bottom: 2px solid var(--panel-line);
+    padding-bottom: 18px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .brand {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+  }
+
+  .brand h1 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 42px;
+    letter-spacing: 0.5px;
+    margin: 0;
+    color: var(--paper);
+    text-transform: uppercase;
+    line-height: 1;
+  }
+
+  .brand .amber-word { color: var(--amber); }
+
+  .brand .subtitle {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--paper-dim);
+    border-left: 2px solid var(--panel-line);
+    padding-left: 14px;
+  }
+
+  .server-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--paper-dim);
+  }
+
+  .led {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #444;
+    box-shadow: 0 0 0 0 rgba(0,0,0,0);
+    transition: background 0.3s, box-shadow 0.3s;
+  }
+
+  .led.on {
+    background: var(--phosphor);
+    box-shadow: 0 0 8px 2px rgba(94,255,154,0.55);
+  }
+
+  .led.off {
+    background: var(--alert-red);
+    box-shadow: 0 0 8px 2px rgba(255,92,77,0.5);
+  }
+
+  /* -------------------- Layout -------------------- */
+  .grid {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 20px;
+  }
+
+  @media (max-width: 860px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+
+  .panel {
+    background: linear-gradient(180deg, var(--panel-charcoal), var(--panel-charcoal-2));
+    border: 1px solid var(--panel-line);
+    border-radius: 3px;
+    position: relative;
+  }
+
+  .panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 3px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+    pointer-events: none;
+  }
+
+  .panel-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--paper-dim);
+    padding: 14px 18px 0;
+  }
+
+  /* -------------------- Dialer -------------------- */
+  .dialer-body { padding: 12px 18px 20px; }
+
+  .field-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--paper-dim);
+    margin: 14px 0 6px;
+    display: block;
+  }
+
+  input[type="tel"] {
+    width: 100%;
+    background: var(--panel-black);
+    border: 1px solid var(--panel-line);
+    color: var(--paper);
+    font-family: var(--font-mono);
+    font-size: 16px;
+    padding: 11px 12px;
+    border-radius: 2px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input[type="tel"]:focus { border-color: var(--amber-dim); }
+  input[type="tel"]::placeholder { color: #55584d; }
+
+  .dial-button {
+    margin-top: 18px;
+    width: 100%;
+    background: var(--amber);
+    color: #191305;
+    border: none;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 20px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 13px 0;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: transform 0.08s ease, box-shadow 0.2s;
+    box-shadow: 0 0 0 rgba(242,169,0,0);
+  }
+
+  .dial-button:hover:not(:disabled) {
+    box-shadow: 0 0 22px rgba(242,169,0,0.35);
+  }
+
+  .dial-button:active:not(:disabled) { transform: translateY(1px); }
+
+  .dial-button:disabled {
+    background: #4a4326;
+    color: #8a8266;
+    cursor: not-allowed;
+  }
+
+  .hint {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--paper-dim);
+    margin-top: 10px;
+    line-height: 1.5;
+  }
+
+  .config-strip {
+    margin-top: 22px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--panel-line);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--paper-dim);
+    display: grid;
+    gap: 7px;
+  }
+
+  .config-strip .row { display: flex; justify-content: space-between; gap: 8px; }
+  .config-strip .row span:last-child { color: var(--paper); }
+
+  /* -------------------- Recent calls -------------------- */
+  .recent-list {
+    padding: 6px 10px 16px;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+
+  .recent-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 8px;
+    border-radius: 2px;
+    cursor: pointer;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--paper-dim);
+    transition: background 0.15s;
+  }
+
+  .recent-item:hover { background: rgba(255,255,255,0.03); }
+  .recent-item.active { background: rgba(242,169,0,0.08); color: var(--paper); }
+
+  .recent-item .stage-tag {
+    font-size: 9.5px;
+    padding: 2px 6px;
+    border-radius: 8px;
+    border: 1px solid var(--panel-line);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .empty-note {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: #55584d;
+    padding: 10px 8px;
+  }
+
+  /* -------------------- Call stage panel -------------------- */
+  .stage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 16px 22px 0;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .ids {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--paper-dim);
+    line-height: 1.7;
+  }
+
+  .ids b { color: var(--paper); font-weight: 500; }
+
+  .hangup-button {
+    background: transparent;
+    border: 1px solid var(--alert-red);
+    color: var(--alert-red);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 8px 14px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .hangup-button:hover { background: rgba(255,92,77,0.1); }
+  .hangup-button:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* Stepper */
+  .stepper {
+    display: flex;
+    align-items: center;
+    padding: 26px 22px 8px;
+    flex-wrap: wrap;
+    row-gap: 18px;
+  }
+
+  .step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    min-width: 78px;
+  }
+
+  .step .dot {
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: var(--panel-black);
+    border: 2px solid var(--panel-line);
+    transition: all 0.3s;
+  }
+
+  .step.done .dot { background: var(--phosphor-dim); border-color: var(--phosphor); }
+  .step.current .dot {
+    background: var(--amber);
+    border-color: var(--amber);
+    box-shadow: 0 0 10px 2px rgba(242,169,0,0.6);
+    animation: pulse 1.4s infinite;
+  }
+  .step.failed .dot { background: var(--alert-red); border-color: var(--alert-red); }
+
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 10px 2px rgba(242,169,0,0.6); }
+    50% { box-shadow: 0 0 4px 0px rgba(242,169,0,0.3); }
+  }
+
+  .step .step-label {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--paper-dim);
+    text-align: center;
+  }
+
+  .step.done .step-label, .step.current .step-label { color: var(--paper); }
+
+  .connector {
+    flex: 1;
+    height: 2px;
+    background: var(--panel-line);
+    margin: 0 -4px;
+    min-width: 20px;
+    align-self: flex-start;
+    margin-top: 5px;
+  }
+
+  .connector.done { background: var(--phosphor-dim); }
+
+  /* Event log */
+  .log-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--paper-dim);
+    padding: 20px 22px 0;
+  }
+
+  .event-log {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 12px 22px 22px;
+    max-height: 320px;
+    overflow-y: auto;
+    line-height: 1.9;
+  }
+
+  .event-row { display: flex; gap: 12px; }
+  .event-time { color: #55584d; flex-shrink: 0; }
+  .event-type { color: var(--phosphor); }
+  .event-detail { color: var(--paper-dim); }
+
+  .placeholder-state {
+    padding: 60px 22px 70px;
+    text-align: center;
+    color: var(--paper-dim);
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+  }
+
+  .placeholder-state .glyph {
+    font-family: var(--font-display);
+    font-size: 54px;
+    color: var(--panel-line);
+    margin-bottom: 6px;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--panel-charcoal-2);
+    border: 1px solid var(--alert-red);
+    color: var(--paper);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 12px 18px;
+    border-radius: 3px;
+    opacity: 0;
+    transition: opacity 0.25s, transform 0.25s;
+    pointer-events: none;
+    max-width: 90vw;
+  }
+
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--panel-line); border-radius: 4px; }
+</style>
+</head>
+<body>
+  <div class="frame">
+    <div class="header">
+      <div class="brand">
+        <h1>Inspire<span class="amber-word">Works</span></h1>
+        <div class="subtitle">IVR Switchboard · Plivo Voice</div>
+      </div>
+      <div class="server-status">
+        <span class="led" id="server-led"></span>
+        <span id="server-status-text">checking server…</span>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- LEFT: Dialer + recent calls -->
+      <div>
+        <div class="panel" style="margin-bottom: 20px;">
+          <div class="panel-label">Outbound Dialer</div>
+          <div class="dialer-body">
+            <label class="field-label" for="destination-input">Destination number</label>
+            <input type="tel" id="destination-input" placeholder="+91 98765 43210" autocomplete="off" />
+            <button class="dial-button" id="dial-button">Place Call</button>
+            <div class="hint" id="dial-hint">Enter E.164 or national format — normalised automatically.</div>
+
+            <div class="config-strip">
+              <div class="row"><span>caller id</span><span id="cfg-caller">—</span></div>
+              <div class="row"><span>associate</span><span id="cfg-associate">—</span></div>
+              <div class="row"><span>signature check</span><span id="cfg-sig">—</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-label">Recent Calls</div>
+          <div class="recent-list" id="recent-list">
+            <div class="empty-note">No calls placed yet this session.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Live call state -->
+      <div class="panel" id="live-panel">
+        <div id="live-panel-content">
+          <div class="placeholder-state">
+            <div class="glyph">☎</div>
+            Place a call to watch it move through<br />authentication and the IVR menu here.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  const STAGE_STEPS = [
+    { key: "answered",             label: "Answered" },
+    { key: "authenticated",        label: "OTP Verified" },
+    { key: "main_menu",            label: "IVR Menu" },
+    { key: "action",               label: "Action" },
+    { key: "completed",            label: "Done" },
+  ];
+
+  // Maps a raw session "stage" value to how far along the stepper it reflects.
+  function stepIndexForStage(stage) {
+    switch (stage) {
+      case "initiated": return -1;
+      case "answered":
+      case "awaiting_otp": return 0;
+      case "authenticated": return 1;
+      case "language_menu": return 1;
+      case "main_menu": return 2;
+      case "playing_audio":
+      case "connecting_associate": return 3;
+      case "completed": return 4;
+      case "failed": return -2;
+      default: return -1;
+    }
+  }
+
+  const els = {
+    serverLed: document.getElementById("server-led"),
+    serverStatusText: document.getElementById("server-status-text"),
+    destinationInput: document.getElementById("destination-input"),
+    dialButton: document.getElementById("dial-button"),
+    dialHint: document.getElementById("dial-hint"),
+    cfgCaller: document.getElementById("cfg-caller"),
+    cfgAssociate: document.getElementById("cfg-associate"),
+    cfgSig: document.getElementById("cfg-sig"),
+    recentList: document.getElementById("recent-list"),
+    livePanelContent: document.getElementById("live-panel-content"),
+    toast: document.getElementById("toast"),
+  };
+
+  let activeSessionId = null;
+  let pollHandle = null;
+  let knownSessions = [];
+
+  function showToast(message) {
+    els.toast.textContent = message;
+    els.toast.classList.add("show");
+    setTimeout(() => els.toast.classList.remove("show"), 3800);
+  }
+
+  async function fetchJson(url, options) {
+    const response = await fetch(url, options);
+    let body = null;
+    try { body = await response.json(); } catch (_) { /* no body */ }
+    if (!response.ok) {
+      const detail = (body && body.detail) ? body.detail : `Request failed (${response.status})`;
+      throw new Error(detail);
+    }
+    return body;
+  }
+
+  async function refreshHealth() {
+    try {
+      const health = await fetchJson("/health");
+      els.serverLed.classList.add("on");
+      els.serverLed.classList.remove("off");
+      els.serverStatusText.textContent = `${health.application} · ${health.environment}`;
+      els.cfgCaller.textContent = health.caller_number;
+      els.cfgAssociate.textContent = health.associate_number;
+      els.cfgSig.textContent = health.signature_verification ? "enabled" : "DISABLED";
+      els.cfgSig.style.color = health.signature_verification ? "var(--phosphor)" : "var(--alert-red)";
+    } catch (error) {
+      els.serverLed.classList.add("off");
+      els.serverLed.classList.remove("on");
+      els.serverStatusText.textContent = "server unreachable";
+    }
+  }
+
+  async function refreshRecentCalls() {
+    try {
+      knownSessions = await fetchJson("/api/calls?limit=12");
+      renderRecentList();
+    } catch (error) {
+      // Non-fatal — the recent list is a convenience, not the primary flow.
+    }
+  }
+
+  function renderRecentList() {
+    if (!knownSessions.length) {
+      els.recentList.innerHTML = '<div class="empty-note">No calls placed yet this session.</div>';
+      return;
+    }
+    els.recentList.innerHTML = "";
+    knownSessions.forEach((session) => {
+      const item = document.createElement("div");
+      item.className = "recent-item" + (session.session_id === activeSessionId ? " active" : "");
+      item.innerHTML = `
+        <span>${session.destination_number}</span>
+        <span class="stage-tag">${session.stage.replace(/_/g, " ")}</span>
+      `;
+      item.addEventListener("click", () => selectSession(session.session_id));
+      els.recentList.appendChild(item);
+    });
+  }
+
+  function selectSession(sessionId) {
+    activeSessionId = sessionId;
+    renderRecentList();
+    pollActiveSession();
+  }
+
+  async function placeCall() {
+    const toNumber = els.destinationInput.value.trim();
+    els.dialButton.disabled = true;
+    els.dialButton.textContent = "Dialling…";
+    try {
+      const payload = toNumber ? { to_number: toNumber } : {};
+      const result = await fetchJson("/api/calls", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      showToast(`Call queued to ${result.destination_number} — answer your phone now.`);
+      activeSessionId = result.session_id;
+      await refreshRecentCalls();
+      renderRecentList();
+      pollActiveSession();
+    } catch (error) {
+      showToast(error.message);
+    } finally {
+      els.dialButton.disabled = false;
+      els.dialButton.textContent = "Place Call";
+    }
+  }
+
+  async function hangupActiveCall() {
+    if (!activeSessionId) return;
+    try {
+      await fetch(`/api/calls/${activeSessionId}`, { method: "DELETE" });
+      showToast("Call ended.");
+      await pollActiveSession();
+      await refreshRecentCalls();
+    } catch (error) {
+      showToast("Could not end the call.");
+    }
+  }
+
+  function renderLivePanel(session) {
+    const stepIndex = stepIndexForStage(session.stage);
+    const failed = stepIndex === -2;
+
+    const stepsHtml = STAGE_STEPS.map((step, index) => {
+      let stateClass = "";
+      if (failed && index === 0) stateClass = "failed";
+      else if (index < stepIndex) stateClass = "done";
+      else if (index === stepIndex) stateClass = "current";
+
+      const connector = index < STAGE_STEPS.length - 1
+        ? `<div class="connector ${index < stepIndex ? "done" : ""}"></div>`
+        : "";
+
+      return `
+        <div class="step ${stateClass}">
+          <div class="dot"></div>
+          <div class="step-label">${step.label}</div>
+        </div>
+        ${connector}
+      `;
+    }).join("");
+
+    const eventsHtml = session.events.slice().reverse().map((event) => {
+      const time = new Date(event.at).toLocaleTimeString();
+      const detailEntries = Object.entries(event)
+        .filter(([key]) => key !== "at" && key !== "type")
+        .map(([key, value]) => `${key}=${value}`)
+        .join(" ");
+      return `
+        <div class="event-row">
+          <span class="event-time">${time}</span>
+          <span class="event-type">${event.type}</span>
+          <span class="event-detail">${detailEntries}</span>
+        </div>
+      `;
+    }).join("");
+
+    const canHangup = session.call_uuid && !["completed", "failed"].includes(session.stage);
+
+    els.livePanelContent.innerHTML = `
+      <div class="stage-header">
+        <div class="ids">
+          session &nbsp;<b>${session.session_id}</b><br />
+          call uuid &nbsp;<b>${session.call_uuid || "—"}</b><br />
+          language &nbsp;<b>${session.language || "not chosen yet"}</b> &nbsp;·&nbsp;
+          otp attempts &nbsp;<b>${session.otp_attempts}</b>
+        </div>
+        <button class="hangup-button" id="hangup-button" ${canHangup ? "" : "disabled"}>End Call</button>
+      </div>
+      <div class="stepper">${stepsHtml}</div>
+      <div class="log-label">Event Log</div>
+      <div class="event-log">${eventsHtml || '<div class="empty-note">No events yet.</div>'}</div>
+    `;
+
+    const hangupButton = document.getElementById("hangup-button");
+    if (hangupButton) hangupButton.addEventListener("click", hangupActiveCall);
+  }
+
+  async function pollActiveSession() {
+    if (!activeSessionId) return;
+    try {
+      const session = await fetchJson(`/api/calls/${activeSessionId}`);
+      renderLivePanel(session);
+    } catch (error) {
+      els.livePanelContent.innerHTML = `<div class="placeholder-state">Session not found — it may have expired.</div>`;
+    }
+  }
+
+  els.dialButton.addEventListener("click", placeCall);
+  els.destinationInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") placeCall();
+  });
+
+  refreshHealth();
+  refreshRecentCalls();
+  setInterval(refreshHealth, 8000);
+  setInterval(() => {
+    refreshRecentCalls();
+    pollActiveSession();
+  }, 2000);
+})();
+</script>
+</body>
+</html>

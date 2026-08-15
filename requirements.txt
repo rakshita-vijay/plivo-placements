@@ -1,0 +1,8 @@
+# Runtime dependencies (pinned to minor versions for reproducible installs).
+fastapi>=0.110,<1.0
+uvicorn[standard]>=0.27,<1.0
+pydantic>=2.6,<3.0
+pydantic-settings>=2.2,<3.0
+python-multipart>=0.0.9          # Parses Plivo's form-encoded webhook bodies
+plivo>=4.57,<5.0
+httpx>=0.26,<1.0                 # Used by the CLI and the test client
